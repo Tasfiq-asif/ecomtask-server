@@ -28,6 +28,7 @@ async function run() {
 
     // Save product
     app.post('/products', async (req, res) => {
+     
       const product = req.body;
       try {
         const result = await productCollection.insertOne(product);
@@ -39,11 +40,30 @@ async function run() {
     });
 
     // Fetch all products
-    app.get('/allproducts', async (req, res) => {  // Corrected the route path
+    app.get('/allproducts', async (req, res) => {
+
+      const {page=1,limit=10,search=''} =req.query
+      const skip = (page - 1)*limit  
       try {
-        const result = await productCollection.find().toArray();  // Corrected the collection reference
-        res.send(result);
-        console.log(result);
+        const searchQuery = search ? { productName: { $regex: search, $options: 'i' } } // Case-insensitive search
+      : {};
+
+        const products = await productCollection.find(searchQuery)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .toArray()
+
+        const totalProducts = await productCollection.countDocuments(searchQuery)
+        console.log(totalProducts)
+        const totalPages = Math.ceil(totalProducts / limit)
+
+        res.json({
+          products,
+          totalPages,
+          currentPage : parseInt(page),
+          totalProducts
+        });
+        
       } catch (err) {
         console.log("Error fetching products", err);  // Corrected the error message
         res.status(500).send("Error fetching products");
