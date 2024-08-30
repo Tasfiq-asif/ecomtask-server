@@ -42,11 +42,15 @@ async function run() {
     // Fetch all products
     app.get('/allproducts', async (req, res) => {
 
-      const {page=1,limit=10,search='',brand='',category='',minPrice=0,maxPrice=Infinity,sortBy='dateAdded'} =req.query
-      const skip = (page - 1)*limit  
+      const {page=1,itemsPerPage=10,search='',brand='',category='',minPrice=0,maxPrice=10000000000,sortBy='dateAdded'} =req.query
+      const skip = (parseInt(page) - 1)* parseInt(itemsPerPage)  
       try {
       //   const searchQuery = search ? { productName: { $regex: search, $options: 'i' } } // Case-insensitive search
       // : {};
+
+       // Debugging logs to verify parameters
+      console.log(`Page: ${page}, Items Per Page: ${itemsPerPage}, Skip: ${skip}`);
+      console.log(req.query)
 
       const searchQuery = {
           ...(search && { productName: { $regex: search, $options: 'i' } }),
@@ -59,23 +63,26 @@ async function run() {
       const sortQuery = {}
 
     if (sortBy === 'priceAsc') {
-  sortQuery.productPrice = 1;
-} else if (sortBy === 'priceDesc') {
-  sortQuery.productPrice = -1;
-} else {
-  sortQuery.dateAdded = -1; // Default sorting
-}
-
+        sortQuery.productPrice = 1;
+      } else if (sortBy === 'priceDesc') {
+        sortQuery.productPrice = -1;
+      } else {
+        sortQuery.dateAdded = -1; // Default sorting
+      }
+      sortQuery._id = 1;
+      // // Debugging logs to verify queries
+      //   console.log('Search Query:', searchQuery);
+      //   console.log('Sort Query:', sortQuery);
 
         const products = await productCollection.find(searchQuery)
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(parseInt(itemsPerPage))
         .sort(sortQuery)
         .toArray()
 
         const totalProducts = await productCollection.countDocuments(searchQuery)
-        console.log(totalProducts)
-        const totalPages = Math.ceil(totalProducts / limit)
+       
+        const totalPages = Math.ceil(totalProducts / parseInt(itemsPerPage))
 
         res.json({
           products,
