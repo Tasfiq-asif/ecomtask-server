@@ -42,15 +42,36 @@ async function run() {
     // Fetch all products
     app.get('/allproducts', async (req, res) => {
 
-      const {page=1,limit=10,search=''} =req.query
+      const {page=1,limit=10,search='',brand='',category='',minPrice=0,maxPrice=Infinity,sortBy='dateAdded'} =req.query
       const skip = (page - 1)*limit  
       try {
-        const searchQuery = search ? { productName: { $regex: search, $options: 'i' } } // Case-insensitive search
-      : {};
+      //   const searchQuery = search ? { productName: { $regex: search, $options: 'i' } } // Case-insensitive search
+      // : {};
+
+      const searchQuery = {
+        ...(search && {productName: {$regex:search, $option: i}}),
+        ...(brand && { brandName: brand}),
+        ...(category && { productCategory: category}),
+        ...(minPrice && maxPrice && { productPrice:{ $gte:parseFloat(minPrice), $lte:parseFloat(maxPrice)}})
+      }
+
+      const sortQuery = {}
+
+      if(sortBy === 'priceAsc') {
+        sortQuery.productPrice = 1
+      }
+      else if(sortBy === 'priceDesc') {
+        sortQuery.productPrice = -1
+      }
+      else if(sortBy === 'dataAdded') {
+        sortQuery.productPrice = -1
+      }
+
 
         const products = await productCollection.find(searchQuery)
         .skip(skip)
         .limit(parseInt(limit))
+        .sort(sortQuery)
         .toArray()
 
         const totalProducts = await productCollection.countDocuments(searchQuery)
@@ -69,6 +90,15 @@ async function run() {
         res.status(500).send("Error fetching products");
       }
     });
+
+    //get all the brand names 
+
+    app.get('/brands', async (req, res) => {
+      try{
+        const brands = await productCollection.distinct('brandName')
+        res.json(brands)
+      }catch (err) {console.log(err)}
+    })
 
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
