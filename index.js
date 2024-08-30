@@ -49,23 +49,22 @@ async function run() {
       // : {};
 
       const searchQuery = {
-        ...(search && {productName: {$regex:search, $option: i}}),
-        ...(brand && { brandName: brand}),
-        ...(category && { productCategory: category}),
-        ...(minPrice && maxPrice && { productPrice:{ $gte:parseFloat(minPrice), $lte:parseFloat(maxPrice)}})
-      }
+          ...(search && { productName: { $regex: search, $options: 'i' } }),
+          ...(brand && { brandName: brand }),
+          ...(category && { productCategory: category }),
+          ...(minPrice && maxPrice && { productPrice: { $gte: parseFloat(minPrice), $lte: parseFloat(maxPrice) } })
+    };
+
 
       const sortQuery = {}
 
-      if(sortBy === 'priceAsc') {
-        sortQuery.productPrice = 1
-      }
-      else if(sortBy === 'priceDesc') {
-        sortQuery.productPrice = -1
-      }
-      else if(sortBy === 'dataAdded') {
-        sortQuery.productPrice = -1
-      }
+    if (sortBy === 'priceAsc') {
+  sortQuery.productPrice = 1;
+} else if (sortBy === 'priceDesc') {
+  sortQuery.productPrice = -1;
+} else {
+  sortQuery.dateAdded = -1; // Default sorting
+}
 
 
         const products = await productCollection.find(searchQuery)
