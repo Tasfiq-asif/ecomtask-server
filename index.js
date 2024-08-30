@@ -69,11 +69,10 @@ async function run() {
       } else {
         sortQuery.dateAdded = -1; // Default sorting
       }
-      sortQuery._id = 1;
-      // // Debugging logs to verify queries
-      //   console.log('Search Query:', searchQuery);
-      //   console.log('Sort Query:', sortQuery);
 
+      // Ensure stable sorting by adding _id as a secondary criterion
+      sortQuery._id = 1;
+    
         const products = await productCollection.find(searchQuery)
         .skip(skip)
         .limit(parseInt(itemsPerPage))
