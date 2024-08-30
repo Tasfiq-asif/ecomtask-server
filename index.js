@@ -95,9 +95,23 @@ async function run() {
 
     app.get('/brands', async (req, res) => {
       try{
-        const brands = await productCollection.distinct('brandName')
-        res.json(brands)
+        const brands = await productCollection.aggregate([
+          { $group:{_id:"$brandName"}},
+          { $project:{_id:0,brandName: "$_id"}}
+        ]).toArray();
+
+        res.json(brands.map(b=>b.brandName))
       }catch (err) {console.log(err)}
+    })
+
+    //get all the product categories
+
+    app.get('/category',async (req,res)=>{
+      const category = await productCollection.aggregate([
+        {$group:{_id: "$productCategory"}},
+        {$project:{_id:0,productCategory: "$_id" }}
+      ]).toArray()
+      res.json(category.map(pc => pc.productCategory))
     })
 
     // Send a ping to confirm a successful connection
