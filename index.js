@@ -2,10 +2,24 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 3000 ;
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
-app.use(cors());
+
+// Middleware
+const corsOptions = {
+  origin: ['http://localhost:5173', 'http://localhost:5174','https://jobtask-43023.web.app/'],
+  credentials: true,
+  optionSuccessStatus: 200,
+};
+
+const corsConfig = {
+    origin: '',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE']
+}
+app.use(cors(corsConfig))
+app.options("", cors(corsConfig))
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.onhj8vc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -28,7 +42,7 @@ async function run() {
 
     // Save product
     app.post('/products', async (req, res) => {
-     
+
       const product = req.body;
       try {
         const result = await productCollection.insertOne(product);
@@ -43,7 +57,7 @@ async function run() {
     app.get('/allproducts', async (req, res) => {
 
       const {page=1,itemsPerPage=10,search='',brand='',category='',minPrice=0,maxPrice=10000000000,sortBy='dateAdded'} =req.query
-      const skip = (parseInt(page) - 1)* parseInt(itemsPerPage)  
+      const skip = (parseInt(page) - 1)* parseInt(itemsPerPage)
       try {
       //   const searchQuery = search ? { productName: { $regex: search, $options: 'i' } } // Case-insensitive search
       // : {};
@@ -72,7 +86,7 @@ async function run() {
 
       // Ensure stable sorting by adding _id as a secondary criterion
       sortQuery._id = 1;
-    
+
         const products = await productCollection.find(searchQuery)
         .skip(skip)
         .limit(parseInt(itemsPerPage))
@@ -80,7 +94,7 @@ async function run() {
         .toArray()
 
         const totalProducts = await productCollection.countDocuments(searchQuery)
-       
+
         const totalPages = Math.ceil(totalProducts / parseInt(itemsPerPage))
 
         res.json({
@@ -89,14 +103,14 @@ async function run() {
           currentPage : parseInt(page),
           totalProducts
         });
-        
+
       } catch (err) {
         console.log("Error fetching products", err);  // Corrected the error message
         res.status(500).send("Error fetching products");
       }
     });
 
-    //get all the brand names 
+    //get all the brand names
 
     app.get('/brands', async (req, res) => {
       try{
