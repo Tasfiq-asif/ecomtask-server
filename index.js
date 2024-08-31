@@ -8,18 +8,13 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 
 // Middleware
 const corsOptions = {
-  origin: ['http://localhost:5173', 'http://localhost:5174','https://jobtask-43023.web.app/'],
+  origin: ['http://localhost:5173', 'http://localhost:5174','https://jobtask-43023.web.app'],
   credentials: true,
   optionSuccessStatus: 200,
 };
 
-const corsConfig = {
-    origin: '',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE']
-}
-app.use(cors(corsConfig))
-app.options("", cors(corsConfig))
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.onhj8vc.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -36,7 +31,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server
-    await client.connect();
+    // await client.connect();
 
     const productCollection = client.db('JobTask').collection('products');
 
@@ -131,6 +126,9 @@ async function run() {
         {$project:{_id:0,productCategory: "$_id" }}
       ]).toArray()
       res.json(category.map(pc => pc.productCategory))
+    })
+    app.get('/',async (req,res)=>{
+      res.send("The server is running ")
     })
 
     // Send a ping to confirm a successful connection
